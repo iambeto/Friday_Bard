@@ -52,3 +52,19 @@ def main():
                 except Exception as e:
                     print("Error transcribing audio: ", e)
                     continue
+                try:
+                    playsound('wake_detect.mp3')
+                    print("Wake word detected. How can I help you?")
+                    audio = r.listen(source)
+                    with open("prompt.wav", "wb") as f:
+                        f.write(audio.get_wav_data())
+                    result = base_model.transcribe("prompt.wav")
+                    prompt_text = result['text']
+                    print("Sending to Bard: ", prompt_text, "\n")
+                    if len(prompt_text.strip()) == 0:
+                        print("Sorry, I didn't catch that. Try again.")
+                        speak("Sorry, I didn't catch that. Try again.")
+                        continue
+                except Exception as e:
+                    print("Error transcribing audio: ", e)
+                    continue
