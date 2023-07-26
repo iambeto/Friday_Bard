@@ -41,3 +41,14 @@ def main():
                 try:
                     print('\nSay "google" to wake me up. \n')
                     audio = r.listen(source)
+                    with open("wake_detect.wav", "wb") as f:
+                        f.write(audio.get_wav_data())
+                    result = tiny_model.transcribe("wake_detect.wav")
+                    text_input = result['text']
+                    if 'google' in text_input.lower().strip():
+                        break
+                    else:
+                        print('Sorry, no wake word found. Try again.')
+                except Exception as e:
+                    print("Error transcribing audio: ", e)
+                    continue
