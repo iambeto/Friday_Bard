@@ -68,3 +68,11 @@ def main():
                 except Exception as e:
                     print("Error transcribing audio: ", e)
                     continue
+                response = prompt_bard(prompt_text)
+                if sys.platform.startswith('win'):
+                    print("Bard response: ", response)
+                else:
+                    print("\033[31m" + "Bard response: ", response, '\n' + "\033[0m")
+                speak(response)
+
+main()
