@@ -6,8 +6,9 @@ import whisper
 import warnings
 import sys
 
-token = 'PASTE YOUR TOKEN HERE'
-chatbot = Chatbot(token)
+Secure_1PSID = "ZAhse_3nh2nBikCA9usHweN7_HmTS6hcCcAApHjFpN_wNTjlhvWt03tSQF50LzjjbQNGOQ."
+Secure_1PSIDTS = "sidts-CjEBPu3jIZq1U9IsK-qAOYY-Fb5yHRjw0uMA66XUjvlcudRjkSSUR1VQ87zoW-TKBJq8EAA"
+chatbot = Chatbot(Secure_1PSID, Secure_1PSIDTS)
 r = sr.Recognizer()
 
 tiny_model = whisper.load_model('tiny')
@@ -16,63 +17,80 @@ warnings.filterwarnings("ignore", message="FP16 is not support on CPU, using FP3
 
 if sys.platform != 'darwin':
     import pyttsx3
-    engine = pyttsx3.init()
+    engine = pyttsx3.init() 
+    # Get the current speech rate
     rate = engine.getProperty('rate')
-    engine.setProperty('rate', rate-50)
+    # Decrease speech rate by 50 words per minute (Change as desired)
+    engine.setProperty('rate', rate-50) 
 
 def prompt_bard(prompt):
     response = chatbot.ask(prompt)
     return response['content']
 
 def speak(text):
+    # If Mac OS use system messages for TTS
     if sys.platform == 'darwin':
-        ALLOWED_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-_$: ")
-        cleaned_text = ''.join(c for c in text if c in ALLOWED_CHARS)
-        system(f'say "{cleaned_text}"')
+        ALLOWED_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?!-_$: ")
+        clean_text = ''.join(c for c in text if c in ALLOWED_CHARS)
+        system(f"say '{clean_text}'")
+    # Use pyttsx3 for other operating sytstems
     else:
         engine.say(text)
         engine.runAndWait()
 
 def main():
+    # Initialize microphone object
     with sr.Microphone() as source:
         r.adjust_for_ambient_noise(source)
+        # Runs program indefinitely
         while True:
+            # Continuously listens for wake word locally
             while True:
                 try:
                     print('\nSay "google" to wake me up. \n')
                     audio = r.listen(source)
                     with open("wake_detect.wav", "wb") as f:
                         f.write(audio.get_wav_data())
-                    result = tiny_model.transcribe("wake_detect.wav")
+                    # Transcribe wake word using whisper tiny model
+                    result = tiny_model.transcribe('wake_detect.wav')
                     text_input = result['text']
+                    # If wake word is found, break out of loop
                     if 'google' in text_input.lower().strip():
                         break
                     else:
-                        print('Sorry, no wake word found. Try again.')
+                        print("No wake word found. Try again.")
                 except Exception as e:
                     print("Error transcribing audio: ", e)
                     continue
-                try:
-                    playsound('wake_detect.mp3')
-                    print("Wake word detected. How can I help you?")
-                    audio = r.listen(source)
-                    with open("prompt.wav", "wb") as f:
-                        f.write(audio.get_wav_data())
-                    result = base_model.transcribe("prompt.wav")
-                    prompt_text = result['text']
-                    print("Sending to Bard: ", prompt_text, "\n")
-                    if len(prompt_text.strip()) == 0:
-                        print("Sorry, I didn't catch that. Try again.")
-                        speak("Sorry, I didn't catch that. Try again.")
-                        continue
-                except Exception as e:
-                    print("Error transcribing audio: ", e)
+            try:
+                # Play wake word detected notification sound (faster than TTS)
+                playsound('wake_detected.mp3')
+                print("Wake word detected. Please speak your prompt to Bard. \n")
+                # Record prompt
+                audio = r.listen(source)
+                with open("prompt.wav", "wb") as f:
+                    f.write(audio.get_wav_data())
+                # Transcribe prompt using whisper base model
+                result = base_model.transcribe('prompt.wav')
+                prompt_text = result['text']
+                print("Sending to Bard:", prompt_text, '\n')
+                # If prompt is empty, start listening for wake word again
+                if len(prompt_text.strip()) == 0:
+                    print("Empty prompt. Please speak again.")
+                    speak("Empty prompt. Please speak again.")
                     continue
-                response = prompt_bard(prompt_text)
-                if sys.platform.startswith('win'):
-                    print("Bard response: ", response)
-                else:
-                    print("\033[31m" + "Bard response: ", response, '\n' + "\033[0m")
-                speak(response)
-
-main()
+            except Exception as e:
+                print("Error transcribing audio: ", e)
+                continue
+            # Prompt Bard. 
+            response = prompt_bard(prompt_text)
+            # Prints Bard response normal if windows (cannot ASCII delete in command prompt to change font color)
+            if sys.platform.startswith('win'):
+                 print('Bards response: ', response)
+            else:
+                # Prints Bard response in red for linux & mac terminal
+                print("\033[31m" + 'Bards response: ', response, '\n' + "\033[0m")
+            speak(response)
+            
+if __name__ == '__main__':
+    main()
