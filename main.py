@@ -6,8 +6,8 @@ import whisper
 import warnings
 import sys
 
-Secure_1PSID = "ZAhse_3nh2nBikCA9usHweN7_HmTS6hcCcAApHjFpN_wNTjlhvWt03tSQF50LzjjbQNGOQ."
-Secure_1PSIDTS = "sidts-CjEBPu3jIZq1U9IsK-qAOYY-Fb5yHRjw0uMA66XUjvlcudRjkSSUR1VQ87zoW-TKBJq8EAA"
+Secure_1PSID = ""
+Secure_1PSIDTS = ""
 chatbot = Chatbot(Secure_1PSID, Secure_1PSIDTS)
 r = sr.Recognizer()
 
